@@ -4,6 +4,10 @@ public class DiatonicKey {
     private Mode mode;
     private Tonic tonic;
 
+    public DiatonicKey() {
+        this(Mode.MAJOR, Tonic.C);
+    }
+
     public DiatonicKey(Mode mode, Tonic tonic){
         this.mode = mode;
         this.tonic = tonic;
