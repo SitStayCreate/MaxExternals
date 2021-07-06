@@ -21,7 +21,7 @@ public class Dulcimer extends Chordophone {
         int noteVel = z * getVelocity();
 
         //Tune the noteval
-        int tunedGridX = getKey().calculateIntervals(x);
+        int tunedGridX = getKey().convertGridXToNote(x);
         int rootNoteVal = getKey().selectRootNote();
         int noteVal = tunedGridX + (y * 12) + rootNoteVal;
 

@@ -38,25 +38,25 @@ public class DiatonicKey {
 
         int x0, y0, x1, y1, x2, y2;
 
-        x0 = calculateIntervals(x);
+        x0 = convertGridXToNote(x);
         y0 = y;
 
         //x needs to be wrapped when it reaches more than 7
         //wrapping is achieved by increasing the y value
         if(x < 4){
-            x1 = calculateIntervals(x + 2);
+            x1 = convertGridXToNote(x + 2);
             y1 = y;
-            x2 = calculateIntervals(x + 4);
+            x2 = convertGridXToNote(x + 4);
             y2 = y;
         } else if(x < 6){
-            x1 = calculateIntervals(x + 2);
+            x1 = convertGridXToNote(x + 2);
             y1 = y;
-            x2 = calculateIntervals(x - 3);
+            x2 = convertGridXToNote(x - 3);
             y2 = y + 1;
         } else {
-            x1 = calculateIntervals(x - 5);
+            x1 = convertGridXToNote(x - 5);
             y1 = y + 1;
-            x2 = calculateIntervals(x - 3);
+            x2 = convertGridXToNote(x - 3);
             y2 = y + 1;
         }
 
@@ -69,7 +69,7 @@ public class DiatonicKey {
     }
 
     //Helper functions (use ENUM to lookup value)
-    public int calculateIntervals(int gridX){
+    public int convertGridXToNote(int gridX){
         //take pad numbers and convert to scale intervals
         switch(getMode()) {
             case MINOR:
@@ -112,6 +112,52 @@ public class DiatonicKey {
                 }
         }
     }
+
+    //Helper functions (use ENUM to lookup value)
+    public int convertNoteToGridX(int note){
+        //take pad numbers and convert to scale intervals
+        switch(getMode()) {
+            case MINOR:
+                switch (note) {
+                    case 2:
+                        return 1;
+                    case 3:
+                        return 2;
+                    case 5:
+                        return 3;
+                    case 7:
+                        return 4;
+                    case 8:
+                        return 5;
+                    case 10:
+                        return 6;
+                    case 12:
+                        return 7;
+                    default:
+                        return 0;
+                }
+            default: //Default is Major
+                switch (note) {
+                    case 2:
+                        return 1;
+                    case 4:
+                        return 2;
+                    case 5:
+                        return 3;
+                    case 7:
+                        return 4;
+                    case 9:
+                        return 5;
+                    case 11:
+                        return 6;
+                    case 12:
+                        return 7;
+                    default:
+                        return 0;
+                }
+        }
+    }
+
     public int selectRootNote(){
         Tonic tonic = getTonic();
         switch(tonic){

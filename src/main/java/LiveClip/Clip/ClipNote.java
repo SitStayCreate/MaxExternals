@@ -82,4 +82,8 @@ public class ClipNote {
                 velocity + " " +
                 muted;
     }
+
+    static public int convertNotePositionToGridY(double notePosition, double noteDuration){
+        return (int)(notePosition / noteDuration);
+    }
 }

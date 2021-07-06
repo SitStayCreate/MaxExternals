@@ -1,42 +1,36 @@
 package LiveClip;
 
-import LiveClip.Clip.ClipMemory;
-import LiveClip.Clip.ClipNote;
-import LiveClip.Clip.ClipSettings;
+import LiveClip.Clip.*;
+
 import MonomeGrid.GridMemory;
-import Music.DiatonicKey;
-import Music.Mode;
-import Music.Tonic;
+
+import com.cycling74.max.Atom;
 import com.cycling74.max.DataTypes;
 import com.cycling74.max.MaxObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class LiveClipSequencer extends MaxObject {
 
     private ClipSettings clipSettings;
-    private DiatonicKey diatonicKey;
     private ClipMemory clipMemory;
     private GridMemory gridMemory;
+    private GridMode mode;
+    private int targetCol;
 
-    public LiveClipSequencer() {
-        this(0.25, 100, 7, 0);
+    public LiveClipSequencer(){
+        mode = GridMode.Note;
+        clipSettings = new ClipSettings();
+        clipMemory = new ClipMemory();
+        gridMemory = new GridMemory();
+        declareOutlets(new int[]{DataTypes.ALL, DataTypes.ALL});
     }
 
     public LiveClipSequencer(double noteDuration, int velocity, int maxHeight, int muted) {
-        this(new ClipSettings(noteDuration, velocity, maxHeight, muted));
-    }
-
-    public LiveClipSequencer(ClipSettings clipSettings) {
-        this(clipSettings, new DiatonicKey(), new ClipMemory());
-    }
-
-    private LiveClipSequencer(ClipSettings clipSettings,
-                              DiatonicKey diatonicKey,
-                              ClipMemory clipMemory) {
-        this.clipSettings = clipSettings;
-        this.diatonicKey = diatonicKey;
-        this.clipMemory = clipMemory;
+        mode = GridMode.Note;
+        clipSettings = new ClipSettings(noteDuration, velocity, maxHeight, muted);
+        clipMemory = new ClipMemory();
         gridMemory = new GridMemory();
         declareOutlets(new int[]{DataTypes.ALL, DataTypes.ALL});
     }
@@ -49,92 +43,14 @@ public class LiveClipSequencer extends MaxObject {
         clipMemory.removeNote(clipNote);
     }
 
-    private void setDiatonicKey(DiatonicKey diatonicKey) {
-        this.diatonicKey = diatonicKey;
-    }
-
-    private void updateClipMemory(){
-        //clear out the bank before we start - simpler than the logic to check for removing/adding notes
-        clipMemory.unloadClip();
-        for(int i = 0; i < 16; i++){
-            for(int j = 1; j < 8; j++){
-                int z = gridMemory.getCell(i, j);
-                if(z != 0) {
-                    //Calculate the pitch of the note
-                    int invertedY = clipSettings.getGridHeight() - j;
-                    int tunedGridY = diatonicKey.calculateIntervals(invertedY);
-                    int rootNoteVal = diatonicKey.selectRootNote();
-                    int noteValue = tunedGridY + rootNoteVal;
-                    double notePosition = i / 4.0;
-
-                    //Create the note
-                    ClipNote clipNote = new ClipNote(noteValue,
-                            notePosition,
-                            clipSettings.getNoteDuration(),
-                            clipSettings.getVelocity(),
-                            clipSettings.getMuted());
-                    clipMemory.addNote(clipNote);
-                }
-            }
-        }
-    }
-
-    //Publicly Available API
-    public void setClipSettings(ClipSettings clipSettings) {
-        this.clipSettings = clipSettings;
-    }
-
-    public ClipSettings getClipSettings() {
-        return clipSettings;
-    }
-
-    public void setNoteDuration(double noteDuration) {
-        clipSettings.setNoteDuration(noteDuration);
-    }
-
-    public void setVelocity(int velocity) {
-        clipSettings.setVelocity(velocity);
-    }
-
-    public void setMuted(int muted) {
-        clipSettings.setMuted(muted);
-    }
-
-    public void setDiatonicKey(String mode, String tonic){
-        diatonicKey.setMode(Mode.valueOf(mode));
-        diatonicKey.setTonic(Tonic.valueOf(tonic));
-    }
-
-    public void setMode(String mode){
-        diatonicKey.setMode(Mode.valueOf(mode));
-    }
-
-    public void setTonic(String tonic){
-        diatonicKey.setTonic(Tonic.valueOf(tonic));
-    }
-
-//    TODO: change these to load grid memory to support loading data from clips
-//    public void loadClip(String args){
-//        clipMemory.loadClip(args);
-//    }
-//
-//    public void unloadClip(){∂∂
-//        clipMemory.unloadClip();
-//    }
-
-    public void key(int x, int y, int z){
-
-        gridMemory.updateCell(x, y, z);
-        updateClipMemory();
-        //TODO: assign returned value from translateGridToClipNotes() to clipNotes
-        sendGridData();
-        sendClipNotes();
-    }
-
-
-    public void sendClipNotes(){
+    //Output
+    //TODO: Consider replacing StringBuilder with Atom[]
+    //To Ableton
+    private void sendClipNotes(){
         List<ClipNote> clipNotes = clipMemory.getClipNotes();
         StringBuilder outputBuilder = new StringBuilder();
+        Atom[] atoms = new Atom[2];
+        atoms[0] = Atom.newAtom("replaceAllNotes");
 
         if(clipNotes.size() > 0 ){
             //add clipNotes to string builder
@@ -142,32 +58,184 @@ public class LiveClipSequencer extends MaxObject {
                 outputBuilder.append(clipNote.toString());
                 outputBuilder.append(" "); //arg delimiter
             }
-
             //delete extra space
             outputBuilder.deleteCharAt(outputBuilder.length()-1);
         } else {
-            //TODO: Send a delete message or something
             outputBuilder.append("clear");
         }
+        atoms[1] = Atom.newAtom(outputBuilder.toString());
 
-        outlet(0, outputBuilder.toString());
+        outlet(0, atoms);
     }
 
-    public void sendGridData(){
-        for(int i = 0; i < 8; i++){
-            //Need to also send the index
-            StringBuilder rowBuilder = new StringBuilder();
-            rowBuilder.append(i);
-            rowBuilder.append(" "); //arg delimiter
-            //TODO: Check the formatting that is returned
-            for(int cell : gridMemory.getRow(i)){
-                rowBuilder.append(cell);
-                rowBuilder.append(" "); //arg delimiter
-            }
-            //delete extra space
-            rowBuilder.deleteCharAt(rowBuilder.length()-1);
+    //To LEDProcessor - lights Grid
+    private void sendGridData(){
+        //Ignore the first row - it handles the playhead functionality in note mode
+        for(int i = 1; i < 8; i++){
+            //Two elements extra for the function call + index
+            Atom[] leftSide = new Atom[11];
+            Atom[] rightSide = new Atom[11];
+            //Function call
+            leftSide[0] = Atom.newAtom("setLevelRow");
+            rightSide[0] = Atom.newAtom("setLevelRow");
+            //xOffset
+            leftSide[1] = Atom.newAtom(0);
+            rightSide[1] = Atom.newAtom(8);
+            //y
+            leftSide[2] = Atom.newAtom(i);
+            rightSide[2] = Atom.newAtom(i);
 
-            outlet(1, rowBuilder.toString());
+            int[] gridRow = gridMemory.getRow(i);
+            //copy the first 8 elements from gridRow to the elements 3-11 of the leftSide
+            for(int j = 0; j < 8; j++){
+                leftSide[j + 3] = Atom.newAtom(gridRow[j] * 12);
+            }
+            //copy elements 8-16 from gridRow to the elements 3-11 of the leftSide
+            for(int j = 8; j < 16; j++){
+                rightSide[j - 5] = Atom.newAtom(gridRow[j] * 12);
+            }
+            // output is: {setLevelRow xOffset y 0 0 0 0 0 0 0 0}
+            outlet(1,  leftSide);
+            outlet(1,  rightSide);
         }
+    }
+
+    //Input
+    private void updateClipMemory(){
+        //clear out the bank before we start - simpler than the logic to check for removing/adding notes
+        clipMemory.clear();
+        NoteMap noteMap = clipSettings.getNoteMap();
+        VeloMap veloMap = clipSettings.getVeloMap();
+        post(veloMap.toString());
+        for(int i = 0; i < 16; i++){
+            for(int j = 1; j < 8; j++){
+                int z = gridMemory.getCell(i, j);
+                if(z != 0) {
+                    //Calculate the pitch of the note
+                    int noteValue = noteMap.getNote(j);
+                    double notePosition = i / 4.0;
+
+                    //Create the note
+                    ClipNote clipNote = new ClipNote(noteValue,
+                            notePosition,
+                            clipSettings.getNoteDuration(),
+                            veloMap.getVelo(i),
+                            clipSettings.getMuted());
+                    clipMemory.addNote(clipNote);
+                }
+            }
+        }
+    }
+
+    private void updateGridMemory(Atom[] atoms){
+        //unload the clip before you load it - this is exposed in max so calling multiple functions is
+        //a challenge because of potential external timing issues
+        gridMemory.clear();
+        //notes <note_count> note <pitch> <start_pos> <note_duration> <velocity> <muted>
+        int noteCount = atoms[0].toInt();
+
+        NoteMap noteMap = clipSettings.getNoteMap();
+        double noteDuration = clipSettings.getNoteDuration();
+        for(int i = 0; i < noteCount; i++){
+            int index = (i * 6) + 1;
+            //convert clipMemory to grid memory
+            int gridY = noteMap.getGridY(atoms[index + 1].toInt()); //returns -1 if pitch not found
+            int gridX = ClipNote.convertNotePositionToGridY(atoms[index + 2].toDouble(), noteDuration);
+            if(gridY >= 0){
+                gridMemory.updateCell(gridX, gridY, 1);
+            }
+        }
+    }
+
+    private void setNoteDuration(Double noteDuration) {
+        clipSettings.setNoteDuration(noteDuration);
+    }
+
+    //Publicly Available API
+    public void unloadClip(){
+        gridMemory.clear();
+        clipMemory.clear();
+    }
+
+    public void getClipSettings(){
+        clipSettings.getNoteMap();
+        clipSettings.getNoteDuration();
+        clipSettings.getVeloMap();
+        clipSettings.getMuted();
+    }
+
+    public void setNoteMap(Atom[] atoms){
+        List<Integer> pitchVals = new ArrayList<>();
+        for(Atom a : atoms){
+            pitchVals.add(a.toInt());
+        }
+        clipSettings.setNoteMap(pitchVals);
+    }
+
+    //load a clip from live
+    public void notes(Atom[] atoms){
+        updateGridMemory(atoms);
+        updateClipMemory();
+        sendGridData();
+    }
+
+    //individual note press
+    public void key(Atom[] atoms){
+        int x = atoms[0].toInt();
+        int y = atoms[1].toInt();
+        int z = atoms[2].toInt();
+
+        if(z == 0){
+            return;
+        }
+
+        //When entering notes
+        if(mode.equals(GridMode.Note)){
+            //If it's the top row we switch modes
+            if(y == 0){
+                //targetCol stores which col we want to change the velocity of with our next press
+                targetCol = x;
+                mode = GridMode.Velo;
+                //Otherwise we update the clip
+                Atom[] a = new Atom[6];
+                //Function call and mode data
+                a[0] = Atom.newAtom("setVelo");
+                a[1] = Atom.newAtom(mode.toString());
+                a[2] = Atom.newAtom(clipSettings.getVelo(targetCol));
+                //x y z
+                a[3] = atoms[0];
+                a[4] = atoms[1];
+                a[5] = atoms[2];
+                outlet(1, a);
+            } else {
+                updateNoteClip(x, y, z);
+            }
+        //When entering velocities
+        } else if (mode.equals(GridMode.Velo)) {
+            int velo = (y * 16) + x;
+            clipSettings.getVeloMap().setVelo(targetCol, velo);
+            mode = GridMode.Note;
+            Atom[] a = new Atom[6];
+            //Function call and mode data
+            a[0] = Atom.newAtom("setVelo");
+            a[1] = Atom.newAtom(mode.toString());
+            a[2] = Atom.newAtom(velo);
+            //x y z
+            a[3] = atoms[0];
+            a[4] = atoms[1];
+            a[5] = atoms[2];
+            outlet(1, a);
+            //Refresh grid data after changing to note mode
+            sendGridData();
+            updateClipMemory();
+            sendClipNotes();
+        }
+    }
+
+    private void updateNoteClip(int x, int y, int z){
+        gridMemory.updateCell(x, y, z);
+        updateClipMemory();
+        sendGridData();
+        sendClipNotes();
     }
 }

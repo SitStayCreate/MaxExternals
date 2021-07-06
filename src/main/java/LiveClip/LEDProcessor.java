@@ -1,112 +1,111 @@
 package LiveClip;
 
-import LiveClip.Clip.PlayHead;
-import LiveClip.LED.*;
-import MonomeGrid.MainLED;
-import MonomeGrid.ModeLED;
+import LiveClip.Clip.GridMode;
+import MonomeGrid.MonomeLED;
+import com.cycling74.max.Atom;
 import com.cycling74.max.DataTypes;
 import com.cycling74.max.MaxObject;
 
-import java.util.List;
+//TODO: Integrate velo so it is displayed by varibright
+public class LEDProcessor extends MaxObject implements MonomeLED {
+    private GridMode mode;
 
-public class LEDProcessor extends MaxObject {
-    private MainLED mainLED;
-    private ModeLED modeLED;
-    private KeyModeLED keyModeLED;
-    private StepModeLED stepModeLED;
-    private PlayHead playHead;
 
-    public LEDProcessor(){
-        this(new ClipNoteLED(), new KeyModeLED(), new StepModeLED());
-    }
-
-    public LEDProcessor(ClipNoteLED mainLED, KeyModeLED keyModeLED, StepModeLED stepModeLED) {
-        this.mainLED = mainLED;
-        this.keyModeLED = keyModeLED;
-        this.stepModeLED = stepModeLED;
-        //select mode
-        modeLED = stepModeLED;
-        //create a playhead
-        playHead = new PlayHead();
+    public LEDProcessor() {
+        //Initialize in Note mode
+        mode = GridMode.Note;
+        //Create outlets
         declareOutlets(new int[]{DataTypes.ALL, DataTypes.ALL});
     }
 
-    public void changeMode(){
-        if(modeLED instanceof StepModeLED){
-            modeLED = keyModeLED;
-            outlet(0, keyModeLED.getLevelRow().get(0));
-            outlet(0, keyModeLED.getLevelRow().get(1));
-        } else {
-            modeLED = stepModeLED;
-            outlet(0, stepModeLED.getLevelRow().get(0));
-            outlet(0, stepModeLED.getLevelRow().get(1));
+    //This is called when pressing one of the mode change buttons
+    public void setVelo(Atom[] atoms){
+        mode = GridMode.valueOf(atoms[0].toString());
+        if(mode.equals(GridMode.Note)){
+            return;
         }
+
+        //Clear LEDS and display velocity
+        setLevelAll(Atom.newAtom(0));
+
+        int targetVelo = atoms[1].toInt();
+        int x = targetVelo % 16;
+        int y = (int) Math.floor(targetVelo/16);
+        int targetCol = atoms[2].toInt();
+
+        //Create message representing velocity
+        Atom[] targetColMessage = new Atom[3];
+        targetColMessage[0] = Atom.newAtom(targetCol);
+        targetColMessage[1] = Atom.newAtom(0);
+        targetColMessage[2] = Atom.newAtom(8);
+        setLevelLED(targetColMessage);
+
+        Atom[] targetVeloMessage = new Atom[3];
+        targetVeloMessage[0] = Atom.newAtom(x);
+        targetVeloMessage[1] = Atom.newAtom(y);
+        targetVeloMessage[2] = Atom.newAtom(15);
+        setLevelLED(targetVeloMessage);
     }
 
-    public void setModeLEDs(int x, int y, int z){
-        modeLED.setLevelRow(x, y, z);
-    }
-
-    //TODO: Learn about max objects you can send (atom[])
-    //maxArgs is row data i.e. {index 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0}
-    public void setMainLEDs(String maxArgs){
-        String[] splitArgs = maxArgs.split(" ");
-        int index = Integer.parseInt(splitArgs[0]);
-        int[] row = new int[16];
-        for (int i = 1; i < splitArgs.length; i++){
-            row[i-1] = Integer.parseInt(splitArgs[i]);
+    //Call this from playhead so that it only is displayed when in Note mode
+    public void setPlayHead(Atom[] atoms){
+        if(mode.equals(GridMode.Velo)){
+            return;
         }
-        List<int[]> rows = mainLED.setLevelRow(index, row);
-
-        outlet(0, rows.get(0));
-        outlet(0, rows.get(1));
+        setLevelRow(atoms);
     }
 
-    //TODO: Potentially can move head by button presses later
-    public void moveHeadForward(){
-        playHead.incrementPosition();
-        //send out when mode is StepMode
-        sendPlayHead();
+    @Override // pattern: /prefix/led/level/set x y i
+    public void setLevelLED(Atom[] atoms) {
+        Atom[] levelLEDMessage = new Atom[4];
+        levelLEDMessage[0] = Atom.newAtom("/monome/grid/led/level/set");
+        levelLEDMessage[1] = atoms[0];
+        levelLEDMessage[2] = atoms[1];
+        levelLEDMessage[3] = atoms[2];
+
+        outlet(0, levelLEDMessage);
     }
 
-    public void moveHeadBackward(){
-        playHead.decrementPosition();
-        sendPlayHead();
+    @Override // pattern: /prefix/led/level/all s
+    public void setLevelAll(Atom atom) {
+        Atom[] levelAllMessage = new Atom[2];
+        levelAllMessage[0] = Atom.newAtom("/monome/grid/led/level/all");
+        levelAllMessage[1] = atom;
+
+        outlet(0, levelAllMessage);
     }
 
-    //helper method
-    private void sendPlayHead(){
-        //send out when mode is StepMode
-//        if(modeLED instanceof StepModeLED){
-//            modeLED = keyModeLED;
-        int[] leftSide = stepModeLED.getLevelRow().get(0);
-        int[] rightSide = stepModeLED.getLevelRow().get(1);
-        int position = playHead.getPosition();
-
-        if(position < 8){
-            if(position == 0){
-                //clear out final cell of right side
-                rightSide[position + 9] = 4; // 0+9==9
-                leftSide[position + 2] = 15; // 0+2==2
-            } else {
-                //clear out previous cell
-                leftSide[position + 1] = 4; // 1+1==2
-                leftSide[position + 2] = 15; // 1+2==3
-            }
-        } else {
-            //Starting value is 8, so math is different
-            if(position == 8){
-                //clear out final cell of left side
-                leftSide[position + 1] = 4; //8+1==9
-                rightSide[position - 6] = 15; //8-6==2
-            } else {
-                //clear out previous cell
-                rightSide[position - 7] = 4; //9-7==2
-                rightSide[position - 6] = 15; //9-6==3
-            }
+    @Override // pattern: /prefix/led/level/map xOffset yOffset d[32]
+    public void setLevelMap(Atom[] atoms) {
+        Atom[] levelMapMessage = new Atom[35];
+        levelMapMessage[0] = Atom.newAtom("/monome/grid/led/level/map");
+        for(int i = 1; i < 35; i++){
+            levelMapMessage[i] = atoms[i - 1];
         }
-        outlet(1, leftSide);
-        outlet(1, rightSide);
-//        }
+
+        outlet(0, levelMapMessage);
+    }
+
+    @Override // pattern: /prefix/led/level/row xOffset y d[8]
+    public void setLevelRow(Atom[] atoms) {
+        Atom[] levelRowMessage = new Atom[11];
+        levelRowMessage[0] = Atom.newAtom("/monome/grid/led/level/row");
+        for(int i = 1; i < 11; i++){
+            levelRowMessage[i] = atoms[i - 1];
+        }
+
+        outlet(0, levelRowMessage);
+
+    }
+
+    @Override // pattern: /prefix/led/level/col x yOffset d[8]
+    public void setLevelCol(Atom[] atoms) {
+        Atom[] levelColMessage = new Atom[11];
+        levelColMessage[0] = Atom.newAtom("/monome/grid/led/level/col");
+        for(int i = 1; i < 11; i++){
+            levelColMessage[i] = atoms[i-1];
+        }
+
+        outlet(0, levelColMessage);
     }
 }
