@@ -3,8 +3,8 @@ This folder contains Max Externals written in Java. I have three Max 7 projects 
 
 # Instruments
 Chordophone
-github.com/sitstaycreate/chordophone
 A diatonic MIDI layout for the Monome Grid.
+github.com/sitstaycreate/chordophone
 
 LiveClip
 An XOX sequencer for Ableton Live and the Monome Grid.
