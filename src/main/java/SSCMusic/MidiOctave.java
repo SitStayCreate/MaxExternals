@@ -17,7 +17,8 @@ public class MidiOctave {
     }
 
     public void set(int octave) {
-        if(octave < -1 || octave > 9)
-        this.octave = octave;
+        if(octave > -1 || octave < 9){
+            this.octave = octave;
+        }
     }
 }
