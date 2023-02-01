@@ -18,6 +18,16 @@ public:
 	inlet<>  input {this, "List: {int x, int y, int z}, Number: Velocity (0-127)"};
     outlet<> output	{ this, "MIDI Message Output" };
 
+	grid_to_midi(const atoms& args = {}) {
+		if (args.size() > 0)
+			width = args[0];
+	}
+
+	// TODO: Argument from max object
+	attribute<int> width {this, "width", 16,
+		description {"Width"
+					 "Used for list to midi conversion"}};
+
 	attribute<int> velocity {this, "velocity", 127,
 		description {"Velocity"
 					 "Used for Midi Notes"}};
@@ -51,7 +61,7 @@ public:
 			int col = args[0];
 			int row = args[1];
 			int z = args[2];
-			int pitch = col + (row * 16);
+			int pitch = col + (row * width);
 
 			// Error handling - pitch
 			if (pitch < 0 || pitch > 127) {
