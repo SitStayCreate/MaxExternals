@@ -35,19 +35,20 @@ public:
 			int x = args[0];
 			int y = args[1];
 			int z = args[2];
-			// Split left and right
-			if (x < 8) {
-				left.send(x, y, z);
-			}
-			else { 
-				right.send(x, y, z);
-			}
+
 			// Split top and bottom
-			if (y < 8) {
+			if (x < 4) {
 				top.send(x, y, z);
 			}
 			else { 
 				bottom.send(x, y, z);
+			}
+			// Split left and right
+			if (y < 8) {
+				left.send(x, y, z);
+			}
+			else { 
+				right.send(x, y, z);
 			}
 
 			// Send all
