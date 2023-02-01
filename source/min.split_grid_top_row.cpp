@@ -30,21 +30,21 @@ public:
 				return {};
 			}
 			
-			int x = args[0];
-			int y = args[1];
+			int col = args[0];
+			int row = args[1];
 			int z = args[2];
 
 			// Send Top Row
-			if (x == 0) {
-				topRow.send(x, y, z);
+			if (row == 0) {
+				topRow.send(col, row, z);
 			}
 			// Send Bottom Rows
 			else { 
-				bottomRows.send(x, y, z);
+				bottomRows.send(col, row, z);
 			}
 
 			// Send all
-			all.send(x, y, z);
+			all.send(col, row, z);
 
 			return {};
 		}

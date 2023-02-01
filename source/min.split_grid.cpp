@@ -32,27 +32,27 @@ public:
 				return {};
 			}
 			
-			int x = args[0];
-			int y = args[1];
+			int col = args[0];
+			int row = args[1];
 			int z = args[2];
 
 			// Split top and bottom
-			if (x < 4) {
-				top.send(x, y, z);
+			if (row < 4) {
+				top.send(col, row, z);
 			}
 			else { 
-				bottom.send(x, y, z);
+				bottom.send(col, row, z);
 			}
 			// Split left and right
-			if (y < 8) {
-				left.send(x, y, z);
+			if (col < 8) {
+				left.send(col, row, z);
 			}
 			else { 
-				right.send(x, y, z);
+				right.send(col, row, z);
 			}
 
 			// Send all
-			all.send(x, y, z);
+			all.send(col, row, z);
 
 			return {};
 		}
