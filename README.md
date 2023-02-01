@@ -1,5 +1,5 @@
 # MaxExternals
-This folder contains Max Externals written in Java. I have three Max 7 projects that use them hosted in their own repos.
+This folder contains Max Externals written in Java and c++. I have three Max 7 projects that use them hosted in their own repos.
 
 # Chordophone
 A diatonic MIDI layout for the Monome Grid: 
