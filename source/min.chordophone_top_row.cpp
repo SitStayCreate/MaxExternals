@@ -24,8 +24,7 @@ public:
     MIN_RELATED		{"print, jit.print, dict.print"};
 
     inlet<>  input { this, "Monome Grid Top Row" };
-    outlet<> output0 { this, "rootNote (int)" };
-	outlet<> output1 {this, "mode (int)"};
+    outlet<> output { this, "setRootNote (int), setMode (int)" };
 	outlet<> led {this, "led messages (int x, int y, int z)"};
 
 	chordophone_top_row(const atoms& args = {}) {
@@ -46,8 +45,8 @@ public:
 		// Set rootNoteLED
 		rootNoteLED = rootNote - rootNoteOffset;
 		// send RootNote
-		output0.send(setRootNoteString, rootNote);
-		output1.send(setModeString, mode);
+		output.send(setRootNoteString, rootNote);
+		output.send(setModeString, mode);
 		// send LED messages
 		led.send(setLEDString, rootNoteLED, 0, 1);
 		led.send(setLEDString, modeLED, 0, 1);
@@ -91,7 +90,7 @@ public:
 				// Set rootNoteLED
 				rootNoteLED = col;
 				// Send rootNote
-				output0.send(setRootNoteString, rootNote);
+				output.send(setRootNoteString, rootNote);
 				// Send new led
 				led.send(setLEDString, rootNoteLED, 0, 1);
 			}
@@ -101,7 +100,7 @@ public:
 				// Assign new mode - subtract offset
 				int mode = col - modeOffset;
 				// Send mode
-				output0.send(setModeString, mode);
+				output.send(setModeString, mode);
 				// Set modeLED
 				modeLED = col;
 				// Send new led
