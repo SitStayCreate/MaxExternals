@@ -10,14 +10,7 @@ using namespace c74::min;
 class grid_memory : public object<grid_memory> {
 
 private:
-	int memory[8][16] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // row 0
-						{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  // row 1
-						{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  // row 2
-						{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  // row 3
-						{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  // row 4
-						{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  // row 5
-						{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  // row 6
-						{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}; // row 7
+	int memory[16][8];
 
 public:
     MIN_DESCRIPTION	{"Post to the Max Console."};
@@ -25,20 +18,29 @@ public:
     MIN_AUTHOR		{"Cycling '74"};
     MIN_RELATED		{"print, jit.print, dict.print"};
 
-    inlet<>  input	{ this, "Input" };
-    outlet<> output	{ this, "Output" };
+    inlet<>  input	{ this, "get, getAll, getRow, setRow int[17], set (int x, int y, int z, clear" };
+    outlet<> output	{ this, "get: int x int y int z, getRow: int[16], getAll: int[128]" };
+
+	grid_memory(const atoms& args = {}) {
+		// Initialize values x = col and y = row (it's confusing, but it's how monome defined it)
+		for (int y = 0; y < 8; y++) {
+			for (int x = 0; x < 16; x++) {
+				memory[x][y] = 0; 
+			}
+		}
+	}
 
 	message<> get{this, "get",
 		MIN_FUNCTION {
 			// Error handling - list size
-			if (args.size() < 2) {
-				cout << "Invalid Message - Messages are list: (int row, int col)" << endl;
+			if (args.size() != 3) {
+				cout << "Invalid Message - Messages are get (int x, int y)" << endl;
 				return {};
 			}
 			// send the selected cell through the outlet
-			int row = args[0];
-			int col = args[1];
-			output.send(memory[row][col]);
+			int x = args[0];
+			int y = args[1];
+			output.send(x, y, memory[x][y]);
 			return {};
 		}
 	};
@@ -48,29 +50,45 @@ public:
 			// send all through the outlet
 			output.send({
 				// Row 0
-				memory[0][0],memory[0][1],memory[0][2],memory[0][3],memory[0][4],memory[0][5],memory[0][6],memory[0][7],
-				memory[0][8],memory[0][9],memory[0][10],memory[0][11],memory[0][12],memory[0][13],memory[0][14],memory[0][15],
+				memory[0][0],memory[1][0],memory[2][0],memory[3][0],
+				memory[4][0],memory[5][0],memory[6][0],memory[7][0],
+				memory[8][0],memory[9][0],memory[10][0],memory[11][0], 
+				memory[12][0],memory[13][0],memory[14][0],memory[15][0],
 				// Row 1
-				memory[1][0],memory[1][1],memory[1][2],memory[1][3],memory[1][4],memory[1][5],memory[1][6],memory[1][7],
-				memory[1][8],memory[1][9],memory[1][10],memory[1][11],memory[1][12],memory[1][13],memory[1][14],memory[1][15],
+				memory[0][1],memory[1][1],memory[2][1],memory[3][1],
+				memory[4][1],memory[5][1],memory[6][1],memory[7][1],
+				memory[8][1],memory[9][1],memory[10][1],memory[11][1], 
+				memory[12][1],memory[13][1],memory[14][1],memory[15][1],
 				// Row 2
-				memory[2][0],memory[2][1],memory[2][2],memory[2][3],memory[2][4],memory[2][5],memory[2][6],memory[2][7],
-				memory[2][8],memory[2][9],memory[2][10],memory[2][11],memory[2][12],memory[2][13],memory[2][14],memory[2][15],
+				memory[0][2],memory[1][2],memory[2][2],memory[3][2],
+				memory[4][2],memory[5][2],memory[6][2],memory[7][2],
+				memory[8][2],memory[9][2],memory[10][2],memory[11][2], 
+				memory[12][2],memory[13][2],memory[14][2],memory[15][2],
 				// Row 3
-				memory[3][0],memory[3][1],memory[3][2],memory[3][3],memory[3][4],memory[3][5],memory[3][6],memory[3][7],
-				memory[3][8],memory[3][9],memory[3][10],memory[3][11],memory[3][12],memory[3][13],memory[3][14],memory[3][15],
+				memory[0][3],memory[1][3],memory[2][3],memory[3][3],
+				memory[4][3],memory[5][3],memory[6][3],memory[7][3],
+				memory[8][3],memory[9][3],memory[10][3],memory[11][3], 
+				memory[12][3],memory[13][3],memory[14][3],memory[15][3],
 				// Row 4
-				memory[4][0],memory[4][1],memory[4][2],memory[4][3],memory[4][4],memory[4][5],memory[4][6],memory[4][7],
-				memory[4][8],memory[4][9],memory[4][10],memory[4][11],memory[4][12],memory[4][13],memory[4][14],memory[4][15],
+				memory[0][4],memory[1][4],memory[2][4],memory[3][4],
+				memory[4][4],memory[5][4],memory[6][4],memory[7][4],
+				memory[8][4],memory[9][4],memory[10][4],memory[11][4], 
+				memory[12][4],memory[13][4],memory[14][4],memory[15][4],
 				// Row 5
-				memory[5][0],memory[5][1],memory[5][2],memory[5][3],memory[5][4],memory[5][5],memory[5][6],memory[5][7],
-				memory[5][8],memory[5][9],memory[5][10],memory[5][11],memory[5][12],memory[5][13],memory[5][14],memory[5][15],
+				memory[0][5],memory[1][5],memory[2][5],memory[3][5],
+				memory[4][5],memory[5][5],memory[6][5],memory[7][5],
+				memory[8][5],memory[9][5],memory[10][5],memory[11][5], 
+				memory[12][5],memory[13][5],memory[14][5],memory[15][5],
 				// Row 6
-				memory[6][0],memory[6][1],memory[6][2],memory[6][3],memory[6][4],memory[6][5],memory[6][6],memory[6][7],
-				memory[6][8],memory[6][9],memory[6][10],memory[6][11],memory[6][12],memory[6][13],memory[6][14],memory[6][15],
+				memory[0][6],memory[1][6],memory[2][6],memory[3][6],
+				memory[4][6],memory[5][6],memory[6][6],memory[7][6],
+				memory[8][6],memory[9][6],memory[10][6],memory[11][6], 
+				memory[12][6],memory[13][6],memory[14][6],memory[15][6],
 				// Row 7
-				memory[7][0],memory[7][1],memory[7][2],memory[7][3],memory[7][4],memory[7][5],memory[7][6],memory[7][7],
-				memory[7][8],memory[7][9],memory[7][10],memory[7][11],memory[7][12],memory[7][13],memory[7][14],memory[7][15]});
+				memory[0][7],memory[1][7],memory[2][7],memory[3][7],
+				memory[4][7],memory[5][7],memory[6][7],memory[7][7],
+				memory[8][7],memory[9][7],memory[10][7],memory[11][7], 
+				memory[12][7],memory[13][7],memory[14][7],memory[15][7]});
 			return {};
 		}
 	};
@@ -78,28 +96,28 @@ public:
 	message<> getRow {this, "getRow",
 		MIN_FUNCTION {
 			// send all through the outlet
-			if (args.size() < 1) {
-				cout << "Invalid Message - Messages are list: (int row, int col)" << endl;
+			if (args.size() != 1) {
+				cout << "Invalid Message - Messages are getRow (int row)" << endl;
 				return {};
 			}
 			int row = args[0];
 			output.send({
-				memory[row][0],
-				memory[row][1],
-				memory[row][2],
-				memory[row][3],
-				memory[row][4],
-				memory[row][5],
-				memory[row][6],
-				memory[row][7],
-				memory[row][8],
-				memory[row][9],
-				memory[row][10],
-				memory[row][11],
-				memory[row][12],
-				memory[row][13],
-				memory[row][14],
-				memory[row][15]});
+				memory[0][row],
+				memory[1][row],
+				memory[2][row],
+				memory[3][row],
+				memory[4][row],
+				memory[5][row],
+				memory[6][row],
+				memory[7][row],
+				memory[8][row],
+				memory[9][row],
+				memory[10][row],
+				memory[11][row],
+				memory[12][row],
+				memory[13][row],
+				memory[14][row],
+				memory[15][row]});
 			return {};
 		}
 	};
@@ -107,15 +125,15 @@ public:
 	message<> setRow {this, "setRow",
 		MIN_FUNCTION {
 			// Error handling - list size
-			if (args.size() < 17) {
-				cout << "Invalid Message - Messages are list: (row #, val 0, val 1 ... val 7)" << endl;
+			if (args.size() != 17) {
+				cout << "Invalid Message - Messages are setRow (int row, int [16])" << endl;
 				return {};
 			}
 			// row
 			int row = args[0];
 			for (int i = 0; i < 16; i++) {
 				// set cell = value
-				memory[row][i] = args[i + 1];
+				memory[i][row] = args[i + 1];
 			}
 			return {};
 		}
@@ -124,8 +142,8 @@ public:
 		message<> set {this, "set",
 		MIN_FUNCTION {
 			// Error handling - list size
-			if (args.size() < 3) {
-				cout << "Invalid Message - Messages are list: (int x, int y, int z)" << endl;
+			if (args.size() != 3) {
+				cout << "Invalid Message - Messages are set (int x, int y, int z)" << endl;
 				return {};
 			}
 			// row
@@ -152,9 +170,9 @@ public:
 
 	message<> clear {this, "clear", 
 		MIN_FUNCTION {
-			for (int row = 0; row < 8; row++) {
-				for (int col = 0; col < 16; col++) {
-					memory[row][col] = 0;
+			for (int y = 0; y < 8; y++) {
+				for (int x = 0; x < 16; x++) {
+					memory[x][y] = 0;
 				}
 			}
 			return {};
