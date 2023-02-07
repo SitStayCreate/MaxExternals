@@ -43,7 +43,7 @@ public:
 			int x = args[0];
 			int y = args[1];
 			leftOutput.send(x, y, memory[x][y]);
-			rightOutput.send("setLEDLevel", x, y, memory[x][y]);
+			rightOutput.send("setLevelLED", x, y, memory[x][y]);
 			return {};
 		}
 	};
@@ -216,8 +216,8 @@ public:
 				memory[x][y] = 0;
 			}
 			// If z > 15, set memory to 15, this is the max value
-			if (z > 15) {
-				memory[x][y] = 5;
+			else if (z > 15) {
+				memory[x][y] = 15;
 			}
 			// Otherwise, set it to z
 			else {
