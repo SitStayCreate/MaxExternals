@@ -4,6 +4,7 @@
 ///	@license	Use of this source code is governed by the MIT License found in the License.md file.
 
 #include "c74_min.h"
+#include <Cmath>
 
 using namespace c74::min;
 
@@ -18,8 +19,9 @@ public:
     MIN_RELATED		{"print, jit.print, dict.print"};
 
     inlet<>  input	{ this, "Notes int count (note int pitch double position double duration int velocity int mute) ... n" };
-    outlet<> left	{ this, "addNote (int pitch double position double duration int velocity int mute)" };
-	outlet<> right {this, "to grid memory (change this later)"};
+	outlet<> left {this, "set (int x, int y, int z)"};
+    outlet<> right	{ this, "addNote (int pitch double position double duration int velocity int mute)" };
+	
 
 	message<> number {this, "number",
 		MIN_FUNCTION {
@@ -45,15 +47,19 @@ public:
 			}
 			// This is used to get the value in args[]
 			int index = 1;
+			left.send("clear");
 			for (int i = 0; i < count; i++) {
 				// pitch (args[2 + n]), position(args[3 + n]), duration(args[4 + n]), velocity(args[5 + n]), mute(args[6 + n])
-				left.send("addNote", args[index + 1], args[index + 2], args[index + 3], args[index + 4], args[index + 5]);
-				right.send("toGrid", args[index + 1], 1);    // TODO: Fix this
-				right.send("toGrid", args[index + 1], 0);
+				right.send("addNote", args[index + 1], args[index + 2], args[index + 3], args[index + 4], args[index + 5]);
+				int grid_col = (int) args[index + 1] % 16;
+				int grid_row = floor((int) args[index + 1] / 16);
+				left.send("set", grid_col, grid_row, 1);
+				left.send("set", grid_col, grid_row, 0);
 				// increase by 6
 				index += 6;
 			}
-			left.send("sendClipNotes");
+			right.send("sendClipNotes");
+			left.send("getAll");
 			return {};
 		}
 	};
