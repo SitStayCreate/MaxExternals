@@ -19,10 +19,9 @@ public:
     MIN_RELATED		{"print, jit.print, dict.print"};
 
     inlet<>  input	{ this, "Notes int count (note int pitch double position double duration int velocity int mute) ... n" };
-	outlet<> left {this, "set (int x, int y, int z)"};
+	outlet<> left {this, "translateClip (int pitch double position)"};
     outlet<> right	{ this, "addNote (int pitch double position double duration int velocity int mute)" };
 	
-
 	message<> number {this, "number",
 		MIN_FUNCTION {
 			// do nothing - this will prevent console noise.
@@ -51,15 +50,11 @@ public:
 			for (int i = 0; i < count; i++) {
 				// pitch (args[2 + n]), position(args[3 + n]), duration(args[4 + n]), velocity(args[5 + n]), mute(args[6 + n])
 				right.send("addNote", args[index + 1], args[index + 2], args[index + 3], args[index + 4], args[index + 5]);
-				int grid_col = (int) args[index + 1] % 16;
-				int grid_row = floor((int) args[index + 1] / 16);
-				left.send("set", grid_col, grid_row, 1);
-				left.send("set", grid_col, grid_row, 0);
+				left.send("translateClip", args[index + 1], args[index + 2]);
 				// increase by 6
 				index += 6;
 			}
 			right.send("sendClipNotes");
-			left.send("getAll");
 			return {};
 		}
 	};
