@@ -14,6 +14,9 @@ public:
 	// Remove a note from memory
 	void removeNote(int notePitch, double notePosition, double noteDuration, int velocity, int muted);
 
+	// Remove all notes
+	void clear();
+
 	std::string toString();
 
 	int size();

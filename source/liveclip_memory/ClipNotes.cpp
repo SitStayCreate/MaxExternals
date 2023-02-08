@@ -16,10 +16,15 @@ int ClipNotes::size() {
 	return notes.size();
 }
 
+void ClipNotes::clear() {
+	notes.clear();
+}
+
 std::string ClipNotes::toString() {
-	std::string out = "";
+	std::string out;
 	for (ClipNote note : notes) {
 		out += note.toString();
+		out += ";";
 	}
 	
 	return out;

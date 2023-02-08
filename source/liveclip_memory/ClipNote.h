@@ -32,8 +32,5 @@ public:
 	void setVelocity(int velocity);
 	void setNotePosition(double notePosition);
 	void setNotePitch(int notePitch);
-	// TODO: put int convertNotePositionToGridX(double notePosition, double noteDuration) 
-	// in liveclip_memory or other class
-	//TODO: Equality test - look this up
 
 };

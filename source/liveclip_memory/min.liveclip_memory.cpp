@@ -42,7 +42,6 @@ public:
 			int velocity = args[3];
 			int muted = args[4];
 			// Create a clipNote and insert it into the collection
-			// TODO: Look up how to do comparison for the set
 			clipNotes.addNote(notePitch, notePosition, noteDuration, velocity, muted);
 			return {};
 		}
@@ -62,7 +61,6 @@ public:
 			int velocity = args[3];
 			int muted = args[4];
 			// Create a clipNote and delete it from the collection
-			// TODO: Look up how to do comparison for the set
 			clipNotes.removeNote(notePitch, notePosition, noteDuration, velocity, muted);
 			return {};
 		}
@@ -70,17 +68,19 @@ public:
 
 	// Send stored ClipNotes
 	message<> sendClipNotes {this, "sendClipNotes",
-		MIN_FUNCTION {// Send data
-			output.send("replaceAllNotes", clipNotes.size(), clipNotes.toString());
+		MIN_FUNCTION {
+			// Send data
+			output.send("replaceAllNotes", clipNotes.toString());
 			return {};
 		}
 	};
 
-	/*
-	* TODO: 
-	* Other methods
-	* improve equality test
-	*/
+	message<> clear {this, "clear",
+		MIN_FUNCTION {
+			clipNotes.clear();
+			return { };
+		}
+	};
 };
 
 

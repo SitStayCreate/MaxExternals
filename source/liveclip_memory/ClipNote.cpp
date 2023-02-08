@@ -9,19 +9,21 @@ ClipNote::ClipNote(int notePitch, double notePosition, double noteDuration, int 
 };
 
 bool ClipNote::operator<(const ClipNote& clipNote) const {
-	return this->notePitch < clipNote.notePitch || 
-		this->notePosition < clipNote.notePosition || 
-		this->noteDuration < clipNote.noteDuration || 
-		this->velocity < clipNote.velocity || 
-		this->muted < clipNote.muted;
+	if (this->notePitch != clipNote.notePitch) {
+		return this->notePitch < clipNote.notePitch;
+	}
+	else { 
+		return this->notePosition < clipNote.notePosition;
+	}
+	
 }
 
 std::string ClipNote::toString() {
-	return std::to_string(notePitch) + " " + 
-		std::to_string(notePosition) + " " + 
-		std::to_string(noteDuration) + " " + 
-		std::to_string(velocity) + " " + 
-		std::to_string(muted) + " ";
+	return std::to_string(notePitch) + "," + 
+		std::to_string(notePosition) + "," + 
+		std::to_string(noteDuration) + "," + 
+		std::to_string(velocity) + "," + 
+		std::to_string(muted);
 }
 
 // Getters
