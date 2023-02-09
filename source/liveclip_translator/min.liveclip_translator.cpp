@@ -37,7 +37,7 @@ public:
 	// Sets a noteValue
 	message<> setNoteValue {this, "setNoteValue",
 		MIN_FUNCTION {
-			if (args.size() < 2) {
+			if (args.size() != 2) {
 				cout << "Invalid message: Requires <arg> int interval, int noteValue" << endl;
 				return {};
 			}
@@ -120,7 +120,7 @@ public:
 				// update grid_memory
 				gridOutput.send("set", x, y, z);
 				// tell grid_memory to send data
-				gridOutput.send("get", x, y, z);
+				gridOutput.send("getLevelLED", x, y, z);
 			}
 
 			return {};
@@ -133,7 +133,7 @@ public:
 			// Clear grid_memory
 			gridOutput.send("clear");
 			// dump output
-			gridOutput.send("getAll");
+			gridOutput.send("getLevelMap");
 			return {};
 		}
 	};
