@@ -5,7 +5,6 @@
 
 #include "c74_min.h"
 #include "NoteValues.h"
-#include "VelocityValues.h"
 
 using namespace c74::min;
 
@@ -13,7 +12,7 @@ class liveclip_translator : public object<liveclip_translator> {
 
 private:
 	NoteValues noteValues;
-	VelocityValues velocityValues;
+	int velocity;
 	double noteDuration;
 
 public:
@@ -30,7 +29,7 @@ public:
 	// Constructor
 	liveclip_translator(const atoms& args = {}) {
 		noteValues = NoteValues();
-		velocityValues = VelocityValues();
+		velocity = 127;
 		noteDuration = 0.25;
 	}
 
@@ -46,14 +45,32 @@ public:
 		}
 	};
 
-	// Sets a setVelocityValue
-	message<> setVelocityValue {this, "setVelocityValue",
+	// Sets a setVelocity
+	message<> setVelocity {this, "setVelocity",
 		MIN_FUNCTION {
-			if (args.size() != 2) {
-				cout << "Invalid message: Requires <arg> int interval, int velocityValue" << endl;
+			// Input validation
+			if (args.size() != 3) {
+				cout << "Invalid message: Requires <arg> int x, int y, int z" << endl;
 				return {};
 			}
-			velocityValues.set(args[0], args[1]);
+			
+			// Only register button presses, not releases
+			if (args[2] == 0) {
+				return {};
+			}
+			// args[0] * 127 / 15;
+			// 127 = max velocity 15 = number of x calues 
+			// 127 / 15 = 8.47 rounds to 8.5
+			// So args[0] * 127 / 15 is approx args[0] * 8.5
+			// floor of args[0] * 8.5 = note velocity
+			velocity = floor((int) args[0] * 8.5);
+			// Send setRow message to clear existing data
+			gridOutput.send("setRow", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+			// Light to second brightest value for grids with
+			// 4 LED levels so that the playhead still lights
+			// all of the LEDs
+			gridOutput.send("set", args[0], 0, 11);
+			gridOutput.send("getLevelRow", 0);
 			return {};
 		}
 	};
@@ -80,7 +97,6 @@ public:
 			int y = args[1];
 			int z = args[2];
 			int pitch = noteValues.getNote(y);
-			int velocity = velocityValues.getVelocity(x);
 			double position = x / 4.0;
 			if (pitch == -1) {
 				return {};
