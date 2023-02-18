@@ -7,11 +7,10 @@
 
 using namespace c74::min;
 
-class grid_stepseq_playhead : public object<grid_stepseq_playhead> {
+class liveclip_playhead : public object<liveclip_playhead> {
 
 private:
 	int position;
-	bool on;
 
 	void sendOut() {
 		// refresh LEDs before sending playhead
@@ -33,33 +32,18 @@ public:
 
 
 	// Constructor
-	grid_stepseq_playhead(const atoms& args = {}) {
+	liveclip_playhead(const atoms& args = {}) {
 		position = 0;
-		on = false;
 	}
-
-		// Get the current position
-	message <> number {this, "number",
-		MIN_FUNCTION {
-			if(args[0] == 0){
-				on = false;
-			} else {
-				on = true;
-			}
-			return {};
-		}
-	};
 
 	// Set the current position
 	message <> setPosition {this, "setPosition", 
 		MIN_FUNCTION {
 			// Error handling
-			if (args.size() < 1) {
+			if (args.size() != 1) {
 				cout << "Invalid message: setPosition requires <args> (int index)";
 			}
-			if (!on) { 
-				return {};
-			}
+
 			//update position using incoming arg
 			position = args[0];
 
@@ -70,4 +54,4 @@ public:
 };
 
 
-MIN_EXTERNAL(grid_stepseq_playhead);
+MIN_EXTERNAL(liveclip_playhead);
