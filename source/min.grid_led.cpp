@@ -199,11 +199,46 @@ public:
 			int value29 = args[31];
 			int value30 = args[32];
 			int value31 = args[33];
+			int value32 = args[34];
+			int value33 = args[35];
+			int value34 = args[36];
+			int value35 = args[37];
+			int value36 = args[38];
+			int value37 = args[39];
+			int value38 = args[40];
+			int value39 = args[41];
+			int value40 = args[42];
+			int value41 = args[43];
+			int value42 = args[44];
+			int value43 = args[45];
+			int value44 = args[46];
+			int value45 = args[47];
+			int value46 = args[48];
+			int value47 = args[49];
+			int value48 = args[50];
+			int value49 = args[51];
+			int value50 = args[52];
+			int value51 = args[53];
+			int value52 = args[54];
+			int value53 = args[55];
+			int value54 = args[56];
+			int value55 = args[57];
+			int value56 = args[58];
+			int value57 = args[59];
+			int value58 = args[60];
+			int value59 = args[61];
+			int value60 = args[62];
+			int value61 = args[63];
+			int value62 = args[64];
+			int value63 = args[65];
 
 			output.send(messageString, xOffset, yOffset, value0, value1, value2, value3, value4, value5, value6,
-						value7, value8, value9, value10, value11, value12, value13, value14, value15,
-						value16, value17, value18, value19, value20, value21, value22, value23, value24,
-						value25, value26, value27, value28, value29, value30, value31);
+						value7, value8, value9, value10, value11, value12, value13, value14, value15, value16, 
+						value17, value18, value19, value20, value21, value22, value23, value24, value25, value26, 
+						value27, value28, value29, value30, value31, value32, value33, value34, value35, value36, 
+						value37, value38, value39, value40, value41, value42, value43, value44, value45, value46, 
+						value47, value48, value49, value50, value51, value52, value53, value54, value55, value56, 
+						value57, value58, value59, value60, value61, value62, value63);
 			return {};
 		}
 	};

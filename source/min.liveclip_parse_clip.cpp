@@ -19,42 +19,39 @@ public:
     MIN_RELATED		{"print, jit.print, dict.print"};
 
     inlet<>  input	{ this, "Notes int count (note int pitch double position double duration int velocity int mute) ... n" };
-	outlet<> left {this, "translateClip (int pitch double position)"};
-    outlet<> right	{ this, "addNote (int pitch double position double duration int velocity int mute)" };
+    outlet<> output	{ this, "addNote (int pitch double position double duration int velocity int mute)" };
 	
 	message<> number {this, "number",
 		MIN_FUNCTION {
-			// do nothing - this will prevent console noise.
-			// when an empty clip is selected, Live sends 0. as output.
-			// This is then printed to the console as "doesn't understand float"
+			// Send clear if no clip is loaded - this will happen when you click an empty clip
+			output.send("clear");
 			return { };
 		}
 	};
 
-	// Sets the currently selected Musical mode
+	// Send a new clip when selected in Live
 	message<> notes {this, "notes",
 		MIN_FUNCTION {
 			if (args.size() < 1) {cout << "Invalid message: Requires int count" << endl;
 				return {};
 			}
-			// If no notes present, don't send anything
+			// Clear previous data
+			output.send("clear");
+			// If no notes present, return
 			int count = args[0];
 			if(count == 0){
-				left.send("clear");
-				right.send("clear");
 				return {};
 			}
 			// This is used to get the value in args[]
 			int index = 1;
-			left.send("clear");
+
 			for (int i = 0; i < count; i++) {
 				// pitch (args[2 + n]), position(args[3 + n]), duration(args[4 + n]), velocity(args[5 + n]), mute(args[6 + n])
-				right.send("addNote", args[index + 1], args[index + 2], args[index + 3], args[index + 4], args[index + 5]);
-				left.send("translateClip", args[index + 1], args[index + 2]);
+				output.send("addNote", args[index + 1], args[index + 2], args[index + 3], args[index + 4], args[index + 5]);
 				// increase by 6
 				index += 6;
 			}
-			right.send("sendClipNotes");
+			output.send("sendClipNotes");
 			return {};
 		}
 	};

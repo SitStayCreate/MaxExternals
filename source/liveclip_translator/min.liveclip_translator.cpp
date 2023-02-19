@@ -120,14 +120,26 @@ public:
 		}
 	};
 
-	message<> translateClip {this, "translateClip",
+	message<> addNote {this, "addNote",
 		MIN_FUNCTION {
-			if (args.size() != 2) {
-				cout << "Invalid message: Requires <arg> int pitch, double position" << endl;
+			if (args.size() != 5) {
+				cout << 
+				"Invalid message: Requires addNote (int pitch, double position, double noteDuration, int velocity, bool mute)" 
+				<< endl;
 				return {};
 			}
+			
+			// Get data from args
 			int pitch = args[0];
 			double position = args[1];
+			double noteDuration = args[2];
+			int velocity = args[3];
+
+			// Send data to clip
+			// pitch, position, noteDuration, velocity, muted
+			clipOutput.send("addNote", pitch, position, noteDuration, velocity, 1);
+
+			// Send data to grid
 			int x = position * 4;
 			int y = noteValues.getInterval(pitch);
 			int z = 15;
@@ -143,13 +155,29 @@ public:
 		}
 	};
 
-	// This function just passes the clear message on to the grid
+	// This function just passes the clear message through to both outlets
+	// it also refreshes the LED data displayed on the Grid to reflect the
+	// the new data stored in the grid
 	message<> clear {this, "clear",
 		MIN_FUNCTION {
+			// Clear clip_memory
+			clipOutput.send("clear");
 			// Clear grid_memory
 			gridOutput.send("clear");
-			// dump output
-			gridOutput.send("getLevelMap");
+			// update left half of the grid
+			gridOutput.send("getLevelMap", 0, 0);
+			// update right half of the grid
+			gridOutput.send("getLevelMap", 8, 0);
+			return {};
+		}
+	};
+
+	// This function just passes the sendClipNotes message through to the
+	// clipOutput. This is called after addNotes when a new clip is loaded
+	// from the API.
+	message<> sendClipNotes {this, "sendClipNotes",
+		MIN_FUNCTION{
+			clipOutput.send("sendClipNotes");
 			return {};
 		}
 	};

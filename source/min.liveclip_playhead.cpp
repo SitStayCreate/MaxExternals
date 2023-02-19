@@ -32,7 +32,7 @@ public:
 
 
 	// Constructor
-	liveclip_playhead(const atoms& args = {}) {
+	grid_stepseq_playhead(const atoms& args = {}) {
 		position = 0;
 	}
 
